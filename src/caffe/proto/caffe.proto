@@ -307,7 +307,12 @@ message ParamSpec {
 
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
-//
+// 
+// Updated proto with a new layer, hard tanh (a piecewise approximation of tanh)
+// LayerParameter next available layer-specific ID: 149 (last added: hardtanh_param)
+// Updated proto with Ristretto
+// LayerParameter next available layer-specific ID: 148 (last added: quantization_param)
+// Original proto
 // LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
@@ -392,6 +397,7 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
+  optional QuantizationParameter quantization_param = 147;
   optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
@@ -402,9 +408,38 @@ message LayerParameter {
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
+  optional HardTanHParameter hardtanh_param = 148;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+}
+
+// Message for layers with reduced word with arithmetic
+message QuantizationParameter{
+  enum Precision {
+    DYNAMIC_FIXED_POINT = 0;
+    MINIFLOAT = 1;
+    INTEGER_POWER_OF_2_WEIGHTS = 2;
+  }
+  optional Precision precision = 1 [default = DYNAMIC_FIXED_POINT];
+  enum Rounding {
+    NEAREST = 0;
+    STOCHASTIC = 1;
+  }
+  optional Rounding rounding_scheme = 2 [default = NEAREST];
+  // Dynamic fixed point word width
+  optional uint32 bw_layer_in = 3 [default = 32];
+  optional uint32 bw_layer_out = 4 [default = 32];
+  optional uint32 bw_params = 5 [default = 32];
+  optional int32 fl_layer_in = 6 [default = 16];
+  optional int32 fl_layer_out = 7 [default = 16];
+  optional int32 fl_params = 8 [default = 16];
+  // Minifloat word width
+  optional uint32 mant_bits = 9 [default = 23];
+  optional uint32 exp_bits = 10 [default = 8];
+  // Integer-power-of-two weights
+  optional int32 exp_min = 11 [default = -8];
+  optional int32 exp_max = 12 [default = -1];
 }
 
 // Message that stores parameters used to apply transformation
@@ -1151,6 +1186,15 @@ message TanHParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
+message HardTanHParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
+}
+
 // Message that stores parameters used by TileLayer
 message TileParameter {
   // The index of the axis to tile.
@@ -1260,6 +1304,7 @@ message V1LayerParameter {
     SPLIT = 22;
     SLICE = 33;
     TANH = 23;
+    HARDTANH = 40;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
   }
@@ -1300,6 +1345,7 @@ message V1LayerParameter {
   optional SoftmaxParameter softmax_param = 39;
   optional SliceParameter slice_param = 31;
   optional TanHParameter tanh_param = 37;
+  optional HardTanHParameter hardtanh_param = 43;
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;
   optional TransformationParameter transform_param = 36;

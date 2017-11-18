@@ -15,6 +15,7 @@
 #include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
+#include "caffe/layers/hardtanh_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 #ifdef USE_CUDNN
@@ -317,6 +318,32 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
+
+// Get hard tanh layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetHardTanHLayer(const LayerParameter& param) {
+  HardTanHParameter_Engine engine = param.hardtanh_param().engine();
+  if (engine == HardTanHParameter_Engine_DEFAULT) {
+    engine = HardTanHParameter_Engine_CAFFE;
+//#ifdef USE_CUDNN
+//    engine = HardTanHParameter_Engine_CUDNN;
+//#endif
+  }
+  if (engine == HardTanHParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new HardTanHLayer<Dtype>(param));
+//#ifdef USE_CUDNN
+//  }
+//  else if (engine == HardTanHParameter_Engine_CUDNN) {
+//    return shared_ptr<Layer<Dtype> >(new CuDNNHardTanHLayer<Dtype>(param));
+//#endif
+  }
+  else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+
+REGISTER_LAYER_CREATOR(HardTanH, GetHardTanHLayer);
 
 #ifdef WITH_PYTHON_LAYER
 template <typename Dtype>
