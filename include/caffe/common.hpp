@@ -16,7 +16,16 @@
 #include <utility>  // pair
 #include <vector>
 
+#ifdef CMAKE_WINDOWS_BUILD
+  #include "caffe/export.hpp"
+#endif
 #include "caffe/util/device_alternate.hpp"
+
+// Added by Yongseok Choi
+#define   QUANT_MODE      0   // 0: Ristretto original (assign 1 less integer bit for in/out actvations than that to cover all values from a given dataset), 
+                              // 1: 1 more integer bit for in/out activations than Ristretto (same as Ristretto for parameters)
+                              // Mode 1 seems more effective for low-level vision (e.g. super-resolution) while the other for high-level vision.
+#define   QUANT_ALL_8BIT  0   // Quantize all bit-widths of input, output activations & parameters into 8 bits
 
 // Convert macro to string
 #define STRINGIFY(m) #m
